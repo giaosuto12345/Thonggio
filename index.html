@@ -2,9 +2,11 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Thông gió</title>
   <style>
+    * { -webkit-tap-highlight-color: transparent; }
+
     body {
       margin: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -13,64 +15,72 @@
 
     .header {
       text-align: center;
-      font-size: 32px;
+      font-size: clamp(22px, 6vw, 32px);
       font-weight: 800;
       color: #1976d2;
-      padding: 24px 12px 8px;
+      padding: 18px 12px 6px;
       letter-spacing: 1px;
     }
 
     .container {
-      padding: 12px;
+      padding: 10px;
       max-width: 900px;
       margin: 0 auto;
     }
 
+    /* Giữ 2 cột cả trên mobile giống app */
     .grid-2 {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 12px;
+      gap: 10px;
     }
 
     .card {
       background: #fff;
       border-radius: 18px;
-      padding: 16px;
+      padding: 14px;
       box-shadow: 0 6px 16px rgba(0,0,0,0.08);
     }
 
     .card-title {
       text-align: center;
       font-weight: 800;
-      font-size: 20px;
+      font-size: clamp(16px, 4.5vw, 20px);
       color: #1976d2;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
 
     label {
       display: block;
-      font-size: 14px;
+      font-size: clamp(12px, 3.5vw, 14px);
       color: #555;
-      margin-top: 10px;
+      margin-top: 8px;
       margin-bottom: 4px;
     }
 
     input {
       width: 100%;
-      padding: 14px;
-      font-size: 22px;
+      padding: 12px;
+      font-size: clamp(18px, 5.5vw, 22px);
       text-align: center;
       border-radius: 12px;
       border: 1px solid #ddd;
       background: #fdfdfd;
       box-sizing: border-box;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    input:focus {
+      outline: none;
+      border: 2px solid #ff9800;
     }
 
     .btn {
-      margin: 18px 0;
+      margin: 14px 0;
       width: 100%;
-      padding: 16px;
-      font-size: 22px;
+      padding: 14px;
+      font-size: clamp(18px, 5vw, 22px);
       font-weight: bold;
       border: none;
       border-radius: 999px;
@@ -85,49 +95,47 @@
     .result-title {
       text-align: center;
       font-weight: 800;
-      font-size: 22px;
-      margin-bottom: 12px;
+      font-size: clamp(18px, 5vw, 22px);
+      margin-bottom: 10px;
     }
 
     .result-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 12px;
+      gap: 10px;
     }
 
     .result-box {
       background: #e9f5ff;
       border-radius: 16px;
-      padding: 16px;
+      padding: 14px;
       text-align: center;
     }
 
     .result-box p {
       margin: 6px 0;
       color: #555;
+      font-size: clamp(12px, 3.5vw, 14px);
     }
 
     .value {
-      font-size: 28px;
+      font-size: clamp(22px, 7vw, 30px);
       font-weight: 800;
       color: #1976d2;
     }
 
     .final {
-      margin-top: 14px;
+      margin-top: 12px;
       border-radius: 16px;
-      padding: 16px;
+      padding: 14px;
       text-align: center;
-      font-size: 18px;
+      font-size: clamp(14px, 4vw, 18px);
       font-weight: 600;
+      line-height: 1.4;
     }
 
     .ok { background: #e0f7e9; color: #1b5e20; }
     .no { background: #fff3e0; color: #bf360c; }
-
-    @media (max-width: 600px) {
-      .grid-2, .result-grid { grid-template-columns: 1fr; }
-    }
   </style>
 </head>
 <body>
@@ -140,21 +148,21 @@
       <div class="card">
         <div class="card-title">TRONG NHÀ</div>
         <label>Nhiệt độ (°C)</label>
-        <input id="nt" type="number" value="22" />
+        <input id="nt" type="text" inputmode="decimal" value="22" />
         <label>Độ ẩm (%)</label>
-        <input id="dt" type="number" value="73" />
+        <input id="dt" type="text" inputmode="decimal" value="73" />
       </div>
 
       <div class="card">
         <div class="card-title">NGOÀI NHÀ</div>
         <label>Nhiệt độ (°C)</label>
-        <input id="nn" type="number" value="28" />
+        <input id="nn" type="text" inputmode="decimal" value="28" />
         <label>Độ ẩm (%)</label>
-        <input id="dn" type="number" value="75" />
+        <input id="dn" type="text" inputmode="decimal" value="75" />
       </div>
     </div>
 
-    <button class="btn" onclick="tinhToan()">TÍNH TOÁN</button>
+    <button id="btnTinh" class="btn">TÍNH TOÁN</button>
 
     <div id="ketqua" class="card" style="display:none">
       <div class="result-title">KẾT QUẢ</div>
@@ -181,42 +189,120 @@
   </div>
 
 <script>
-  function dewPoint(temp, humidity) {
-    const a = 17.27;
-    const b = 237.7;
-    const alpha = ((a * temp) / (b + temp)) + Math.log(humidity / 100);
-    return (b * alpha) / (a - alpha);
+  // ===== BẢNG ĐỘ ẨM TUYỆT ĐỐI (GIỐNG HỆT CODE JAVA) =====
+  const BANG_DO_AM = [
+    [3.11,3.17,3.22,3.27,3.32,3.37,3.43,3.48,3.53,3.58,3.63,3.68,3.74,3.79,3.84,3.94,4,4,4.05,4.1,4.15,4.2,4.25,4.31,4.36,4.41,4.46,4.52,4.57,4.62,4.67,4.72,4.77,4.83,4.88,4.93,4.65,5.04,5.09,5.14],
+    [3.33,3.39,3.45,3.5,3.56,3.61,3.67,3.72,3.78,3.83,3.89,3.94,4,4.06,4.11,4.22,4.28,4.28,4.33,4.39,4.45,4.5,4.56,4.61,4.67,4.72,4.78,4.83,4.89,4.95,5,5.06,5.11,5.17,5.22,5.28,4.98,5.39,5.45,5.5],
+    [3.57,3.63,3.69,3.75,3.81,3.86,3.92,3.98,4.04,4.1,4.16,4.22,4.28,4.34,4.4,4.52,4.58,4.58,4.64,4.7,4.76,4.82,4.87,4.93,4.99,5.05,5.11,5.17,5.23,5.29,5.35,5.41,5.47,5.53,5.59,5.65,5.34,5.77,5.83,5.89],
+    [3.82,3.88,3.94,4.01,4.07,4.13,4.2,4.26,4.32,4.39,4.45,4.52,4.59,4.64,4.7,4.83,4.83,4.9,4.96,5.02,5.1,5.16,5.22,5.29,5.35,5.42,5.48,5.54,5.61,5.67,5.72,5.79,5.85,5.91,5.98,6.04,6.1,6.17,6.23,6.29],
+    [4.08,4.14,4.21,4.21,4.35,4.42,4.49,4.55,4.62,4.69,4.76,4.82,4.89,4.96,5.03,5.1,5.16,5.23,5.3,5.37,5.44,5.5,5.57,5.64,5.71,5.78,5.84,5.91,5.98,6.05,6.12,6.18,6.25,6.32,6.39,6.46,6.52,6.59,6.66,6.73],
+    [4.36,4.43,4.5,4.57,4.65,4.72,4.79,4.86,4.94,5.01,5.08,5.15,5.23,5.3,5.37,5.44,5.52,5.59,5.66,5.74,5.81,5.88,5.95,6.03,6.1,6.17,6.24,6.32,6.39,6.46,6.53,6.61,6.68,6.75,6.82,6.9,6.97,7.04,7.11,7.19],
+    [4.65,4.73,4.8,4.88,4.96,5.04,5.11,5.19,5.27,5.35,5.42,5.5,5.58,5.66,5.73,5.81,5.89,5.97,6.04,6.12,6.2,6.28,6.35,6.43,6.51,6.59,6.67,6.74,6.82,6.9,6.97,7.05,7.13,7.21,7.28,7.36,7.44,7.52,7.59,7.67],
+    [4.96,5.04,5.13,5.21,5.29,5.38,5.46,5.54,5.62,5.71,5.79,5.87,5.95,6.04,6.12,6.2,6.28,6.37,6.45,6.53,6.62,6.7,6.78,6.86,6.95,7.03,7.11,7.19,7.29,7.36,7.44,7.53,7.61,7.69,7.77,7.86,7.94,8.02,8.1,8.19],
+    [5.29,5.38,5.47,5.56,5.64,5.73,5.82,5.91,6,6.09,6.17,6.26,6.35,6.45,6.53,6.61,6.7,6.79,6.88,6.97,7.06,7.14,7.29,7.32,7.41,7.5,7.59,7.67,7.76,7.85,7.94,8.05,8.13,8.2,8.29,8.38,8.47,8.56,8.64,8.73],
+    [5.64,5.73,5.83,5.92,6.02,6.11,6.2,6.3,6.39,6.49,6.58,6.67,6.77,6.86,6.96,7.05,7.17,7.24,7.33,7.43,7.52,7.61,7.71,7.8,7.9,7.99,8.08,8.18,8.27,8.37,8.46,8.55,8.65,8.74,8.84,8.93,9.02,9.12,9.21,9.31],
+    [6.01,6.11,6.21,6.31,6.41,6.51,6.61,6.71,6.81,6.91,7.01,7.11,7.21,7.31,7.41,7.51,7.61,7.71,7.81,7.91,8.01,8.11,8.21,8.31,8.41,8.51,8.61,8.71,8.81,8.91,9.01,9.11,9.21,9.31,9.41,9.51,9.61,9.71,9.81,9.91],
+    [6.4,6.5,6.61,6.72,6.82,6.93,7.04,7.14,7.25,7.36,7.46,7.57,7.68,7.78,7.89,8,8.1,8.21,8.32,8.42,8.59,8.64,8.74,8.85,8.96,9.06,9.17,9.28,9.38,9.49,9.6,9.7,9.81,9.92,10.02,10.13,10.24,10.34,10.45,10.56],
+    [6.81,6.92,7.03,7.15,7.26,7.38,7.49,7.6,7.72,7.83,7.94,8.06,8.17,8.28,8.4,8.51,8.62,8.74,8.85,8.96,9.08,9.19,9.3,9.42,9.53,9.64,9.76,9.87,9.98,10.1,10.21,10.33,10.44,10.55,10.67,10.78,10.89,11.01,11.12,11.23],
+    [7.24,7.36,7.48,7.6,7.72,7.84,7.97,8.09,8.21,8.33,8.45,8.57,8.69,8.81,8.93,9.05,9.17,9.29,9.41,9.53,9.66,9.78,9.9,10.02,10.14,10.26,10.38,10.5,10.62,10.74,10.86,10.89,11.09,11.22,11.34,11.47,11.59,11.71,11.83,11.95],
+    [7.7,7.83,7.95,8.08,8.21,8.34,8.47,8.6,8.72,8.85,8.98,9.11,9.24,9.37,9.49,9.62,9.75,9.88,10.01,10.14,10.26,10.39,10.52,10.65,10.78,10.91,11.06,11.16,11.29,11.42,11.55,11.68,11.8,11.93,12.06,12.19,12.32,12.45,12.57,12.7],
+    [8.18,8.32,8.45,8.59,8.73,8.86,9,9.13,9.27,9.41,9.54,9.68,9.82,9.95,10.09,10.23,10.36,10.5,10.63,10.77,10.91,11.04,11.18,11.32,11.45,11.59,11.78,11.86,12,12.19,12.33,12.54,12.68,12.82,12.95,13.09,13.15,13.22,13.36,13.5],
+    [8.69,8.83,8.98,9.12,9.27,9.41,9.56,9.7,9.85,9.99,10.14,10.28,10.43,10.57,10.72,10.86,11.01,11.15,11.29,11.44,11.58,11.73,11.87,12.02,12.16,12.31,12.45,12.6,12.74,12.95,13.03,13.18,13.32,13.47,13.61,13.76,13.9,14.05,14.19,14.34],
+    [9.22,9.38,9.53,9.68,9.84,9.99,10.15,10.3,10.45,10.61,10.76,10.91,11.07,11.22,11.38,11.53,11.68,11.84,11.99,12.14,12.3,12.45,12.6,12.76,12.91,13.07,13.22,13.37,13.53,13.68,13.83,13.99,14.14,14.3,14.45,14.6,14.76,14.91,15.06,15.22],
+    [9.79,9.95,10.11,10.27,10.44,10.6,10.76,10.93,11.09,11.25,11.42,11.58,11.74,11.91,12.07,12.23,12.4,12.56,12.73,12.88,13.05,13.21,13.37,13.54,13.7,13.86,14.03,14.19,14.35,14.52,14.68,14.84,15.01,15.17,15.33,15.49,15.66,15.82,15.98,16.15],
+    [10.38,10.55,10.73,10.9,11.07,11.24,11.42,11.59,11.76,11.94,12.11,12.28,12.46,12.63,12.8,12.97,13.15,13.32,13.49,13.67,13.84,14.01,14.19,14.36,14.53,14.7,14.88,15.05,15.22,15.4,15.57,15.74,15.92,16.09,16.26,16.43,16.61,16.78,16.95,17.13],
+    [11,11.19,11.37,11.55,11.74,11.92,12.1,12.29,12.47,12.67,12.84,13.12,13.2,13.39,13.57,13.75,13.94,14.12,14.3,14.49,14.67,14.85,15.09,15.22,15.4,15.59,15.77,15.95,16.14,16.32,16.5,16.71,16.87,17.05,17.24,17.42,17.6,17.79,17.97,18.15],
+    [11.66,11.85,12.05,12.24,12.43,12.63,12.82,13.02,13.21,13.41,13.6,13.79,14.02,14.18,14.38,14.57,14.77,14.96,15.15,15.35,15.54,15.74,15.93,16.13,16.32,16.51,16.71,16.9,17.1,17.29,17.49,17.68,17.87,18.07,18.26,18.46,18.65,18.85,19.04,19.23],
+    [12.35,12.55,12.76,12.96,13.17,13.37,13.58,13.79,13.99,14.2,14.4,14.61,14.89,15.02,15.23,15.43,15.64,15.84,16.06,16.26,16.46,16.67,16.85,17.68,17.28,17.4,17.7,17.9,18.11,18.31,18.52,18.72,18.93,19.14,19.34,19.55,19.75,19.96,20.17,20.37],
+    [13.07,13.29,13.5,13.72,13.94,14.16,14.38,14.59,14.81,15.13,15.25,15.46,15.68,15.9,16.12,16.34,16.55,16.77,16.99,17.21,17.43,17.64,17.86,18.03,18.3,18.51,18.73,18.95,19.17,19.39,19.6,19.83,20.04,20.26,20.48,20.64,20.91,21.13,21.35,21.56],
+    [13.83,14.06,14.29,14.52,14.75,14.98,15.21,15.44,15.67,15.9,16.13,16.36,16.59,16.82,17.06,17.29,17.52,17.75,17.98,18.21,18.44,18.67,18.9,19.13,19.36,19.59,19.82,20.05,20.28,20.51,20.74,20.97,21.2,21.45,21.67,21.89,22.13,22.36,22.59,22.82],
+    [14.63,14.87,15.11,15.36,15.6,15.84,16.09,16.33,16.58,16.82,17.06,17.31,17.55,17.79,18.04,18.28,18.53,18.77,19.01,19.26,19.5,19.75,19.99,20.23,20.48,20.72,20.96,21.21,21.45,21.7,21.94,22.18,22.43,22.67,22.91,23.16,23.4,23.65,23.89,24.13],
+    [15.46,15.72,15.98,16.23,16.49,16.75,17.01,17.27,17.52,17.78,18.04,18.3,18.55,18.81,19.07,19.33,19.58,19.84,20.1,20.36,20.62,20.87,21.13,21.39,21.65,21.9,22.16,22.42,22.68,22.94,23.19,23.45,23.71,23.97,24.2,24.49,24.74,25,25.25,25.51],
+    [16.34,16.61,16.88,17.16,17.43,17.7,17.97,18.25,18.52,18.79,19.06,19.34,19.61,19.88,20.15,20.42,20.7,20.97,21.24,21.51,21.79,22.06,22.33,22.6,22.87,23.15,23.42,23.69,23.96,24.24,24.51,24.78,25.05,25.33,25.4,25.87,26.14,26.42,26.69,26.96],
+    [17.26,17.55,17.83,18.12,18.41,18.7,18.98,19.27,19.56,19.85,20.13,20.42,20.71,21,21.29,21.57,22.08,22.15,22.44,22.72,23.01,23.3,23.59,23.87,24.16,24.45,24.74,25.02,25.31,25.61,25.89,26.18,26.46,26.75,27.01,27.33,27.59,27.9,28.19,28.48],
+    [18.22,18.53,18.83,19.13,19.44,19.74,20.04,20.35,20.65,20.91,21.26,21.56,21.87,22.17,22.47,23.08,23.22,23.38,23.69,23.99,24.3,24.56,24.96,25.21,25.51,25.81,26.12,26.42,26.73,27.03,27.33,27.64,27.94,28.24,28.55,28.85,29.16,29.46,29.79,30.07],
+    [19.23,19.55,19.87,20.19,20.51,20.83,21.15,21.47,21.79,22.03,22.44,22.76,23.08,23.4,23.72,24.36,24.48,24.68,25.1,25.32,25.64,25.96,26.28,26.61,26.92,27.24,27.56,27.88,28.2,28.53,28.85,29.17,29.49,29.81,30.13,30.45,30.77,31.09,31.41,31.73],
+    [20.29,20.62,20.96,21.3,21.64,21.98,22.31,22.65,22.94,23.32,23.67,25.31,24.34,24.68,25.02,25.37,25.73,26.03,26.37,26.71,27.05,27.39,27.72,28.06,28.4,28.74,29.08,29.42,29.75,30.09,30.43,30.77,31.31,31.44,31.78,32.12,32.46,32.8,33.13,33.47],
+    [21.39,21.75,22.1,22.46,22.82,23.18,23.53,23.83,24.25,24.61,24.96,26.68,25.67,26.03,26.38,26.75,27.1,27.45,27.81,28.17,28.51,28.88,29.26,29.59,29.95,30.31,30.66,31.02,31.38,31.73,32.09,32.45,32.8,33.16,33.52,33.87,34.33,34.59,34.4,35.3],
+    [22.55,22.92,23.3,23.68,24.05,24.43,24.81,25.18,25.56,25.93,26.31,26.68,27.06,27.43,27.81,28.16,28.56,28.94,29.31,29.69,30.07,30.44,30.85,31.19,31.57,31.94,32.32,32.76,33.07,33.45,33.82,34.2,34.57,34.65,35.33,35.7,36.08,36.45,36.83,37.21]
+  ];
+
+  function layDoAmTuyetDoi(nhietDo, doAm) {
+    let idx_nhietDo = Math.round(nhietDo) - 1;
+    let idx_doAm = Math.round(doAm) - 60;
+
+    if (idx_nhietDo < 0) idx_nhietDo = 0;
+    if (idx_nhietDo >= 34) idx_nhietDo = 33;
+    if (idx_doAm < 0) idx_doAm = 0;
+    if (idx_doAm >= 40) idx_doAm = 39;
+
+    return BANG_DO_AM[idx_nhietDo][idx_doAm];
   }
 
-  function absHumidity(temp, humidity) {
-    const es = 6.112 * Math.exp((17.67 * temp) / (temp + 243.5));
-    const e = es * (humidity / 100);
-    return (2.1674 * e) / (273.15 + temp);
+  function tinhNhietDoDiemSuong(doAmTuyetDoi) {
+    const bangDoAm = [
+      5.18,5.55,5.94,6.33,6.8,7.27,7.74,8.28,8.82,9.41,
+      10.01,10.66,11.45,12.11,12.83,13.64,14.49,15.4,16.32,
+      17.31,18.33,19.43,20.57,21.75,23.02,24.35,25.76,27.2,28.78,30.37
+    ];
+
+    let b8 = 0;
+    for (let i = 0; i < bangDoAm.length; i++) {
+      if (doAmTuyetDoi >= bangDoAm[i]) b8 = i;
+      else break;
+    }
+
+    const b9 = bangDoAm[b8];
+    const b10 = (b8 + 1 < bangDoAm.length) ? bangDoAm[b8 + 1] : bangDoAm[b8];
+    const b11 = Math.abs(b9 - doAmTuyetDoi);
+    const b7 = Math.min(Math.abs(doAmTuyetDoi - b9), Math.abs(doAmTuyetDoi - b10));
+    const b12 = (b11 === b7) ? b9 : b10;
+    const b13 = (b11 === b7) ? (b8 + 1) : (b8 + 2);
+
+    return Math.round(doAmTuyetDoi * b13 / b12 * 10) / 10;
+  }
+
+  function fmt(num, dec) {
+    return num.toLocaleString('vi-VN', {
+      minimumFractionDigits: dec,
+      maximumFractionDigits: dec
+    });
   }
 
   function tinhToan() {
-    const nt = parseFloat(document.getElementById('nt').value);
-    const dt = parseFloat(document.getElementById('dt').value);
-    const nn = parseFloat(document.getElementById('nn').value);
-    const dn = parseFloat(document.getElementById('dn').value);
+    const nt = parseFloat(document.getElementById('nt').value.replace(',', '.'));
+    const dt = parseFloat(document.getElementById('dt').value.replace(',', '.'));
+    const nn = parseFloat(document.getElementById('nn').value.replace(',', '.'));
+    const dn = parseFloat(document.getElementById('dn').value.replace(',', '.'));
 
-    const daTrong = absHumidity(nt, dt);
-    const daNgoai = absHumidity(nn, dn);
-    const ndTrong = dewPoint(nt, dt);
-    const ndNgoai = dewPoint(nn, dn);
+    if ([nt, dt, nn, dn].some(v => isNaN(v))) {
+      alert('Vui lòng nhập đủ số hợp lệ');
+      return;
+    }
 
-    document.getElementById('daTrong').innerText = daTrong.toFixed(2);
-    document.getElementById('daNgoai').innerText = daNgoai.toFixed(2);
-    document.getElementById('ndTrong').innerText = ndTrong.toFixed(1);
-    document.getElementById('ndNgoai').innerText = ndNgoai.toFixed(1);
+    const daTrong = layDoAmTuyetDoi(nt, dt);
+    const daNgoai = layDoAmTuyetDoi(nn, dn);
+    const ndTrong = tinhNhietDoDiemSuong(daTrong);
+    const ndNgoai = tinhNhietDoDiemSuong(daNgoai);
+
+    // Hiển thị đúng như app (14,18 / 16,6 ...)
+    document.getElementById('daTrong').innerText = fmt(daTrong, 2);
+    document.getElementById('daNgoai').innerText = fmt(daNgoai, 2);
+    document.getElementById('ndTrong').innerText = fmt(ndTrong, 1);
+    document.getElementById('ndNgoai').innerText = fmt(ndNgoai, 1);
 
     let ketQua = '';
 
-    if (nn > 32) ketQua = 'Không thông gió (nhiệt độ ngoài > 32°C)';
-    else if (nn < 10) ketQua = 'Không thông gió (nhiệt độ ngoài < 10°C)';
-    else if (daTrong <= daNgoai) ketQua = 'Không thông gió (độ ẩm tuyệt đối trong nhà thấp hơn)';
-    else if (nn > nt && ndNgoai >= nt) ketQua = 'Không thông gió (điểm sương ngoài cao hơn nhiệt độ trong)';
-    else if (nn <= nt && ndTrong >= nn) ketQua = 'Không thông gió (điểm sương trong cao hơn nhiệt độ ngoài)';
+    if (nn > 32) ketQua = 'Không thông gió
+(nhiệt độ ngoài nhà > 32°C)';
+    else if (nn < 10) ketQua = 'Không thông gió
+(nhiệt độ ngoài nhà < 10°C)';
+    else if (daTrong <= daNgoai) ketQua = 'Không thông gió
+(độ ẩm tuyệt đối trong nhà thấp hơn)';
+    else if (nn > nt && ndNgoai >= nt) ketQua = 'Không thông gió
+(nhiệt độ điểm sương ngoài nhà cao hơn)';
+    else if (nn <= nt && ndTrong >= nn) ketQua = 'Không thông gió
+(nhiệt độ điểm sương trong nhà cao hơn)';
     else ketQua = 'Thông gió';
 
     const final = document.getElementById('final');
@@ -225,6 +311,8 @@
 
     document.getElementById('ketqua').style.display = 'block';
   }
+
+  document.getElementById('btnTinh').addEventListener('click', tinhToan);
 </script>
 
 </body>
