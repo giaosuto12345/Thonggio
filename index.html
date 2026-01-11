@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thông gió</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #eaf6ff;
+    }
+
+    .header {
+      text-align: center;
+      font-size: 32px;
+      font-weight: 800;
+      color: #1976d2;
+      padding: 24px 12px 8px;
+      letter-spacing: 1px;
+    }
+
+    .container {
+      padding: 12px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 18px;
+      padding: 16px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+    }
+
+    .card-title {
+      text-align: center;
+      font-weight: 800;
+      font-size: 20px;
+      color: #1976d2;
+      margin-bottom: 12px;
+    }
+
+    label {
+      display: block;
+      font-size: 14px;
+      color: #555;
+      margin-top: 10px;
+      margin-bottom: 4px;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px;
+      font-size: 22px;
+      text-align: center;
+      border-radius: 12px;
+      border: 1px solid #ddd;
+      background: #fdfdfd;
+      box-sizing: border-box;
+    }
+
+    .btn {
+      margin: 18px 0;
+      width: 100%;
+      padding: 16px;
+      font-size: 22px;
+      font-weight: bold;
+      border: none;
+      border-radius: 999px;
+      background: #4caf50;
+      color: #fff;
+      cursor: pointer;
+      box-shadow: 0 6px 14px rgba(76,175,80,0.4);
+    }
+
+    .btn:active { transform: scale(0.98); }
+
+    .result-title {
+      text-align: center;
+      font-weight: 800;
+      font-size: 22px;
+      margin-bottom: 12px;
+    }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .result-box {
+      background: #e9f5ff;
+      border-radius: 16px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .result-box p {
+      margin: 6px 0;
+      color: #555;
+    }
+
+    .value {
+      font-size: 28px;
+      font-weight: 800;
+      color: #1976d2;
+    }
+
+    .final {
+      margin-top: 14px;
+      border-radius: 16px;
+      padding: 16px;
+      text-align: center;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .ok { background: #e0f7e9; color: #1b5e20; }
+    .no { background: #fff3e0; color: #bf360c; }
+
+    @media (max-width: 600px) {
+      .grid-2, .result-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">THÔNG GIÓ</div>
+
+  <div class="container">
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">TRONG NHÀ</div>
+        <label>Nhiệt độ (°C)</label>
+        <input id="nt" type="number" value="22" />
+        <label>Độ ẩm (%)</label>
+        <input id="dt" type="number" value="73" />
+      </div>
+
+      <div class="card">
+        <div class="card-title">NGOÀI NHÀ</div>
+        <label>Nhiệt độ (°C)</label>
+        <input id="nn" type="number" value="28" />
+        <label>Độ ẩm (%)</label>
+        <input id="dn" type="number" value="75" />
+      </div>
+    </div>
+
+    <button class="btn" onclick="tinhToan()">TÍNH TOÁN</button>
+
+    <div id="ketqua" class="card" style="display:none">
+      <div class="result-title">KẾT QUẢ</div>
+
+      <div class="result-grid">
+        <div class="result-box">
+          <p>Độ ẩm tuyệt đối</p>
+          <div id="daTrong" class="value">--</div>
+          <p>Nhiệt độ điểm sương</p>
+          <div id="ndTrong" class="value">--</div>
+        </div>
+
+        <div class="result-box">
+          <p>Độ ẩm tuyệt đối</p>
+          <div id="daNgoai" class="value">--</div>
+          <p>Nhiệt độ điểm sương</p>
+          <div id="ndNgoai" class="value">--</div>
+        </div>
+      </div>
+
+      <div id="final" class="final"></div>
+    </div>
+
+  </div>
+
+<script>
+  function dewPoint(temp, humidity) {
+    const a = 17.27;
+    const b = 237.7;
+    const alpha = ((a * temp) / (b + temp)) + Math.log(humidity / 100);
+    return (b * alpha) / (a - alpha);
+  }
+
+  function absHumidity(temp, humidity) {
+    const es = 6.112 * Math.exp((17.67 * temp) / (temp + 243.5));
+    const e = es * (humidity / 100);
+    return (2.1674 * e) / (273.15 + temp);
+  }
+
+  function tinhToan() {
+    const nt = parseFloat(document.getElementById('nt').value);
+    const dt = parseFloat(document.getElementById('dt').value);
+    const nn = parseFloat(document.getElementById('nn').value);
+    const dn = parseFloat(document.getElementById('dn').value);
+
+    const daTrong = absHumidity(nt, dt);
+    const daNgoai = absHumidity(nn, dn);
+    const ndTrong = dewPoint(nt, dt);
+    const ndNgoai = dewPoint(nn, dn);
+
+    document.getElementById('daTrong').innerText = daTrong.toFixed(2);
+    document.getElementById('daNgoai').innerText = daNgoai.toFixed(2);
+    document.getElementById('ndTrong').innerText = ndTrong.toFixed(1);
+    document.getElementById('ndNgoai').innerText = ndNgoai.toFixed(1);
+
+    let ketQua = '';
+
+    if (nn > 32) ketQua = 'Không thông gió (nhiệt độ ngoài > 32°C)';
+    else if (nn < 10) ketQua = 'Không thông gió (nhiệt độ ngoài < 10°C)';
+    else if (daTrong <= daNgoai) ketQua = 'Không thông gió (độ ẩm tuyệt đối trong nhà thấp hơn)';
+    else if (nn > nt && ndNgoai >= nt) ketQua = 'Không thông gió (điểm sương ngoài cao hơn nhiệt độ trong)';
+    else if (nn <= nt && ndTrong >= nn) ketQua = 'Không thông gió (điểm sương trong cao hơn nhiệt độ ngoài)';
+    else ketQua = 'Thông gió';
+
+    const final = document.getElementById('final');
+    final.innerText = ketQua;
+    final.className = 'final ' + (ketQua.includes('Không') ? 'no' : 'ok');
+
+    document.getElementById('ketqua').style.display = 'block';
+  }
+</script>
+
+</body>
+</html>
