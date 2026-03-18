@@ -140,7 +140,7 @@
       margin-bottom: 10px;
     }
 
-    /* Style riêng cho bảng Chia Giờ */
+    /* ====== BẢNG CHIA GIỜ (ĐÃ UPDATE CHỮ TO RÕ HƠN) ====== */
     .table-container {
       overflow-x: auto;
       border-radius: 12px;
@@ -150,14 +150,30 @@
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: var(--fs-label);
+      font-size: clamp(15px, 4.5vw, 18px); 
       text-align: center;
       min-width: 320px;
     }
-    th, td { padding: 10px 5px; border-bottom: 1px solid #eee; }
-    th { background: #e9f5ff; color: #1976d2; font-weight: bold; }
+    th, td { 
+      padding: 14px 4px; 
+      border-bottom: 1px solid #eee; 
+    }
+    th { 
+      background: #e9f5ff; 
+      color: #1976d2; 
+      font-weight: 800; 
+      font-size: clamp(14px, 4vw, 16px);
+    }
+    td {
+      font-weight: 600; 
+      color: #333;
+    }
     tr:last-child td { border-bottom: none; }
-    .td-highlight { color: #ff9800; font-weight: bold; }
+    .td-highlight { 
+      color: #ff9800; 
+      font-weight: 800; 
+      font-size: clamp(16px, 5vw, 20px); 
+    }
 
     /* Style cho Thông gió cũ */
     .result-grid {
