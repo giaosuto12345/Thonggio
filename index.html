@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Thông gió</title>
+  <title>Quản lý Nhà</title>
   <style>
     * { -webkit-tap-highlight-color: transparent; }
 
@@ -25,17 +25,36 @@
       --fs-final: clamp(20px, 4vw, 18px);
     }
 
-    .header {
-      text-align: center;
-      font-size: var(--fs-header);
-      font-weight: 800;
-      color: #1976d2;
-      padding: 20px 12px 8px;
-      letter-spacing: 1px;
+    /* ====== TAB NAVIGATION ====== */
+    .tabs {
+      display: flex;
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
+    .tab-btn {
+      flex: 1;
+      padding: 15px 0;
+      text-align: center;
+      font-size: var(--fs-card-title);
+      font-weight: 800;
+      color: #888;
+      background: none;
+      border: none;
+      border-bottom: 4px solid transparent;
+      cursor: pointer;
+    }
+    .tab-btn.active {
+      color: #1976d2;
+      border-bottom: 4px solid #1976d2;
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
 
     .container {
-      padding: 10px;
+      padding: 15px 10px;
       max-width: 900px;
       margin: 0 auto;
     }
@@ -51,6 +70,7 @@
       border-radius: 18px;
       padding: 14px;
       box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+      margin-bottom: 15px;
     }
 
     .card-title {
@@ -59,6 +79,7 @@
       font-size: var(--fs-card-title);
       color: #1976d2;
       margin-bottom: 10px;
+      text-transform: uppercase;
     }
 
     label {
@@ -67,9 +88,10 @@
       color: #555;
       margin-top: 8px;
       margin-bottom: 4px;
+      font-weight: bold;
     }
 
-    input {
+    input, select {
       width: 100%;
       padding: 12px;
       font-size: var(--fs-input);
@@ -80,15 +102,23 @@
       box-sizing: border-box;
       appearance: none;
       -webkit-appearance: none;
+      color: #333;
     }
 
-    input:focus {
+    input:focus, select:focus {
       outline: none;
       border: 2px solid #ff9800;
     }
 
+    .time-flex {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .time-flex span { font-weight: bold; color: #555; }
+
     .btn {
-      margin: 16px 0;
+      margin: 5px 0 15px 0;
       width: 100%;
       padding: 14px;
       font-size: var(--fs-button);
@@ -110,31 +140,39 @@
       margin-bottom: 10px;
     }
 
+    /* Style riêng cho bảng Chia Giờ */
+    .table-container {
+      overflow-x: auto;
+      border-radius: 12px;
+      border: 1px solid #eee;
+      margin-top: 10px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: var(--fs-label);
+      text-align: center;
+      min-width: 320px;
+    }
+    th, td { padding: 10px 5px; border-bottom: 1px solid #eee; }
+    th { background: #e9f5ff; color: #1976d2; font-weight: bold; }
+    tr:last-child td { border-bottom: none; }
+    .td-highlight { color: #ff9800; font-weight: bold; }
+
+    /* Style cho Thông gió cũ */
     .result-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
     }
-
     .result-box {
       background: #e9f5ff;
       border-radius: 16px;
       padding: 12px;
       text-align: center;
     }
-
-    .result-box p {
-      margin: 4px 0;
-      color: #555;
-      font-size: var(--fs-label);
-    }
-
-    .value {
-      font-size: var(--fs-value);
-      font-weight: 800;
-      color: #1976d2;
-    }
-
+    .result-box p { margin: 4px 0; color: #555; font-size: var(--fs-label); }
+    .value { font-size: var(--fs-value); font-weight: 800; color: #1976d2; }
     .final {
       margin-top: 12px;
       border-radius: 16px;
@@ -144,63 +182,128 @@
       font-weight: 600;
       line-height: 1.4;
     }
-
     .ok { background: #e0f7e9; color: #1b5e20; }
     .no { background: #fff3e0; color: #bf360c; }
   </style>
 </head>
 <body>
 
-  <div class="header">THÔNG GIÓ</div>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('tab-thong-gio')">THÔNG GIÓ</button>
+    <button class="tab-btn" onclick="switchTab('tab-chia-gio')">CHIA GIỜ</button>
+  </div>
 
   <div class="container">
 
-    <div class="grid-2">
-      <div class="card">
-        <div class="card-title">TRONG NHÀ</div>
-        <label>Nhiệt độ (°C)</label>
-        <input id="nt" type="text" inputmode="decimal" value="22" />
-        <label>Độ ẩm (%)</label>
-        <input id="dt" type="text" inputmode="decimal" value="73" />
+    <div id="tab-thong-gio" class="tab-content active">
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">TRONG NHÀ</div>
+          <label>Nhiệt độ (°C)</label>
+          <input id="nt" type="text" inputmode="decimal" value="22" />
+          <label>Độ ẩm (%)</label>
+          <input id="dt" type="text" inputmode="decimal" value="73" />
+        </div>
+
+        <div class="card">
+          <div class="card-title">NGOÀI NHÀ</div>
+          <label>Nhiệt độ (°C)</label>
+          <input id="nn" type="text" inputmode="decimal" value="28" />
+          <label>Độ ẩm (%)</label>
+          <input id="dn" type="text" inputmode="decimal" value="75" />
+        </div>
       </div>
 
-      <div class="card">
-        <div class="card-title">NGOÀI NHÀ</div>
-        <label>Nhiệt độ (°C)</label>
-        <input id="nn" type="text" inputmode="decimal" value="28" />
-        <label>Độ ẩm (%)</label>
-        <input id="dn" type="text" inputmode="decimal" value="75" />
+      <button id="btnTinh" class="btn">TÍNH TOÁN</button>
+
+      <div id="ketqua" class="card" style="display:none">
+        <div class="result-title">KẾT QUẢ</div>
+        <div class="result-grid">
+          <div class="result-box">
+            <p>Độ ẩm tuyệt đối</p>
+            <div id="daTrong" class="value">--</div>
+            <p>Nhiệt độ điểm sương</p>
+            <div id="ndTrong" class="value">--</div>
+          </div>
+          <div class="result-box">
+            <p>Độ ẩm tuyệt đối</p>
+            <div id="daNgoai" class="value">--</div>
+            <p>Nhiệt độ điểm sương</p>
+            <div id="ndNgoai" class="value">--</div>
+          </div>
+        </div>
+        <div id="final" class="final"></div>
       </div>
     </div>
 
-    <button id="btnTinh" class="btn">TÍNH TOÁN</button>
-
-    <div id="ketqua" class="card" style="display:none">
-      <div class="result-title">KẾT QUẢ</div>
-
-      <div class="result-grid">
-        <div class="result-box">
-          <p>Độ ẩm tuyệt đối</p>
-          <div id="daTrong" class="value">--</div>
-          <p>Nhiệt độ điểm sương</p>
-          <div id="ndTrong" class="value">--</div>
+    <div id="tab-chia-gio" class="tab-content">
+      <div class="card">
+        <div class="card-title">THỜI GIAN LÀM VIỆC</div>
+        
+        <label>Ca Sáng (Vào - Ra)</label>
+        <div class="time-flex" style="margin-bottom: 10px;">
+          <input type="time" id="sang-vao" value="06:45"> 
+          <span>-</span>
+          <input type="time" id="sang-ra" value="11:15">
         </div>
 
-        <div class="result-box">
-          <p>Độ ẩm tuyệt đối</p>
-          <div id="daNgoai" class="value">--</div>
-          <p>Nhiệt độ điểm sương</p>
-          <div id="ndNgoai" class="value">--</div>
+        <label>Ca Chiều (Vào - Ra)</label>
+        <div class="time-flex" style="margin-bottom: 10px;">
+          <input type="time" id="chieu-vao" value="13:15"> 
+          <span>-</span>
+          <input type="time" id="chieu-ra" value="16:45">
         </div>
+
+        <label>Số lượng nhà</label>
+        <select id="so-nha">
+          <option value="1">1 Nhà</option>
+          <option value="2">2 Nhà</option>
+          <option value="3" selected>3 Nhà</option>
+          <option value="4">4 Nhà</option>
+          <option value="5">5 Nhà</option>
+          <option value="6">6 Nhà</option>
+        </select>
       </div>
 
-      <div id="final" class="final"></div>
+      <button onclick="taoDuLieu()" class="btn">CHIA LỊCH TỰ ĐỘNG</button>
+
+      <div id="ket-qua-chia-gio" style="display:none">
+        <div class="card">
+          <div class="result-title" style="font-size: var(--fs-card-title); color: #1976d2;">1. LỊCH RA VÀO</div>
+          <div class="table-container">
+            <table id="bang-ra-vao">
+              <thead><tr><th>Nhà</th><th>Vào Sáng</th><th>Ra Sáng</th><th>Vào Chiều</th><th>Ra Chiều</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="result-title" style="font-size: var(--fs-card-title); color: #1976d2;">2. LỊCH THÔNG GIÓ</div>
+          <div class="table-container">
+            <table id="bang-thong-gio">
+              <thead><tr><th>Nhà</th><th>Mốc 1<br>(Sáng)</th><th>Mốc 2<br>(8-9h)</th><th>Mốc 3<br>(Chiều)</th><th>Mốc 4<br>(14-15h)</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
 
   </div>
 
 <script>
-  // ===== BẢNG ĐỘ ẨM TUYỆT ĐỐI (GIỐNG HỆT CODE JAVA) =====
+  // ===== XỬ LÝ CHUYỂN TAB =====
+  function switchTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    event.currentTarget.classList.add('active');
+  }
+
+  // ==========================================
+  // LOGIC TAB 1: THÔNG GIÓ (Giữ nguyên 100%)
+  // ==========================================
   const BANG_DO_AM = [
     [3.11,3.17,3.22,3.27,3.32,3.37,3.43,3.48,3.53,3.58,3.63,3.68,3.74,3.79,3.84,3.94,4,4,4.05,4.1,4.15,4.2,4.25,4.31,4.36,4.41,4.46,4.52,4.57,4.62,4.67,4.72,4.77,4.83,4.88,4.93,4.65,5.04,5.09,5.14],
     [3.33,3.39,3.45,3.5,3.56,3.61,3.67,3.72,3.78,3.83,3.89,3.94,4,4.06,4.11,4.22,4.28,4.28,4.33,4.39,4.45,4.5,4.56,4.61,4.67,4.72,4.78,4.83,4.89,4.95,5,5.06,5.11,5.17,5.22,5.28,4.98,5.39,5.45,5.5],
@@ -238,16 +341,13 @@
     [22.55,22.92,23.3,23.68,24.05,24.43,24.81,25.18,25.56,25.93,26.31,26.68,27.06,27.43,27.81,28.16,28.56,28.94,29.31,29.69,30.07,30.44,30.85,31.19,31.57,31.94,32.32,32.76,33.07,33.45,33.82,34.2,34.57,34.65,35.33,35.7,36.08,36.45,36.83,37.21]
   ];
 
-  // ===== HÀM GIỐNG HỆT JAVA =====
   function layDoAmTuyetDoi(nhietDo, doAm) {
     let idx_nhietDo = Math.round(nhietDo) - 1;
     let idx_doAm = Math.round(doAm) - 60;
-
     if (idx_nhietDo < 0) idx_nhietDo = 0;
     if (idx_nhietDo >= 34) idx_nhietDo = 33;
     if (idx_doAm < 0) idx_doAm = 0;
     if (idx_doAm >= 40) idx_doAm = 39;
-
     return BANG_DO_AM[idx_nhietDo][idx_doAm];
   }
 
@@ -257,20 +357,17 @@
       10.01,10.66,11.45,12.11,12.83,13.64,14.49,15.4,16.32,
       17.31,18.33,19.43,20.57,21.75,23.02,24.35,25.76,27.2,28.78,30.37
     ];
-
     let b8 = 0;
     for (let i = 0; i < bangDoAm.length; i++) {
       if (doAmTuyetDoi >= bangDoAm[i]) b8 = i;
       else break;
     }
-
     const b9 = bangDoAm[b8];
     const b10 = (b8 + 1 < bangDoAm.length) ? bangDoAm[b8 + 1] : bangDoAm[b8];
     const b11 = Math.abs(b9 - doAmTuyetDoi);
     const b7 = Math.min(Math.abs(doAmTuyetDoi - b9), Math.abs(doAmTuyetDoi - b10));
     const b12 = (b11 === b7) ? b9 : b10;
     const b13 = (b11 === b7) ? (b8 + 1) : (b8 + 2);
-
     return Math.round(doAmTuyetDoi * b13 / b12 * 10) / 10;
   }
 
@@ -296,7 +393,6 @@
     document.getElementById('ndNgoai').innerText = ndNgoai.toFixed(1);
 
     let ketQua = '';
-
     if (nn > 32) ketQua = 'Không thông gió (Nhiệt độ ngoài > 32°C)';
     else if (nn < 10) ketQua = 'Không thông gió (Nhiệt độ ngoài < 10°C)';
     else if (daTrong <= daNgoai) ketQua = 'Không thông gió (Độ ẩm tuyệt đối trong nhà thấp hơn)';
@@ -313,16 +409,105 @@
 
   document.getElementById('btnTinh').addEventListener('click', tinhToan);
 
-  // ===== CHỌN TOÀN BỘ KHI CLICK / FOCUS (GIỐNG ANDROID) =====
   ['nt','dt','nn','dn'].forEach(id => {
     const el = document.getElementById(id);
-    el.addEventListener('focus', () => {
-      setTimeout(() => el.select(), 0);
-    });
-    el.addEventListener('click', () => {
-      el.select();
-    });
+    el.addEventListener('focus', () => { setTimeout(() => el.select(), 0); });
+    el.addEventListener('click', () => { el.select(); });
   });
+
+  // ==========================================
+  // LOGIC TAB 2: CHIA GIỜ TỰ ĐỘNG
+  // ==========================================
+  function formatTime(mins) {
+    let h = Math.floor(mins / 60);
+    let m = mins % 60;
+    return (h < 10 ? '0' + h : h) + ':' + (m < 10 ? '0' + m : m);
+  }
+
+  function parseTime(timeStr) {
+    let parts = timeStr.split(':');
+    return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+  }
+
+  function getRandom(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+  }
+
+  function taoDayThoiGian(baseMin, isForward, numHouses) {
+    let times = [];
+    let current = baseMin;
+    for (let i = 0; i < numHouses; i++) {
+      times.push(current);
+      let step = getRandom(5, 10);
+      current = isForward ? current + step : current - step;
+    }
+    return times;
+  }
+
+  function taoDuLieu() {
+    let n = parseInt(document.getElementById('so-nha').value);
+    
+    let svBase = parseTime(document.getElementById('sang-vao').value);
+    let srBase = parseTime(document.getElementById('sang-ra').value);
+    let cvBase = parseTime(document.getElementById('chieu-vao').value);
+    let crBase = parseTime(document.getElementById('chieu-ra').value);
+
+    let tgSangVao = taoDayThoiGian(svBase, true, n);
+    let tgSangRa = taoDayThoiGian(srBase, false, n);
+    let tgChieuVao = taoDayThoiGian(cvBase, true, n);
+    let tgChieuRa = taoDayThoiGian(crBase, false, n);
+
+    let tgMoc2 = taoDayThoiGian(480 + getRandom(0, 15), true, n);
+    let tgMoc4 = taoDayThoiGian(840 + getRandom(0, 15), true, n);
+
+    let assignSV = shuffle([...tgSangVao]);
+    let assignSR = shuffle([...tgSangRa]);
+    let assignCV = shuffle([...tgChieuVao]);
+    let assignCR = shuffle([...tgChieuRa]);
+    let assignM2 = shuffle([...tgMoc2]);
+    let assignM4 = shuffle([...tgMoc4]);
+
+    let tbodyRaVao = document.querySelector('#bang-ra-vao tbody');
+    let tbodyThongGio = document.querySelector('#bang-thong-gio tbody');
+    
+    tbodyRaVao.innerHTML = '';
+    tbodyThongGio.innerHTML = '';
+
+    for (let i = 0; i < n; i++) {
+      let vaoSang = formatTime(assignSV[i]);
+      let vaoChieu = formatTime(assignCV[i]);
+
+      let tr1 = document.createElement('tr');
+      tr1.innerHTML = `
+        <td><strong>Nhà ${i + 1}</strong></td>
+        <td class="td-highlight">${vaoSang}</td>
+        <td>${formatTime(assignSR[i])}</td>
+        <td class="td-highlight">${vaoChieu}</td>
+        <td>${formatTime(assignCR[i])}</td>
+      `;
+      tbodyRaVao.appendChild(tr1);
+
+      let tr2 = document.createElement('tr');
+      tr2.innerHTML = `
+        <td><strong>Nhà ${i + 1}</strong></td>
+        <td class="td-highlight">${vaoSang}</td>
+        <td>${formatTime(assignM2[i])}</td>
+        <td class="td-highlight">${vaoChieu}</td>
+        <td>${formatTime(assignM4[i])}</td>
+      `;
+      tbodyThongGio.appendChild(tr2);
+    }
+
+    document.getElementById('ket-qua-chia-gio').style.display = 'block';
+  }
 </script>
 
 </body>
