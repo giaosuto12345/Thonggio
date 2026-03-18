@@ -71,7 +71,7 @@
       padding: 14px;
       box-shadow: 0 6px 16px rgba(0,0,0,0.08);
       margin-bottom: 15px;
-      position: relative; /* Thêm cái này để nút Mô tả nằm góc phải */
+      position: relative; 
     }
 
     .card-title {
@@ -130,6 +130,7 @@
       color: #fff;
       cursor: pointer;
       box-shadow: 0 6px 14px rgba(76,175,80,0.4);
+      touch-action: manipulation; /* Chống zoom khi gõ 3 lần trên iPhone */
     }
     .btn:active { transform: scale(0.98); }
 
@@ -330,16 +331,21 @@
             <li>Nhập giờ làm việc (Sáng và Chiều).</li>
             <li>Chọn số lượng nhà (1 đến 6).</li>
           </ul>
-          <strong style="display:inline-block; margin-top: 8px;">2. Ứng dụng tự động tính toán:</strong>
+          <strong style="display:inline-block; margin-top: 8px;">2. Ứng dụng tự động chia:</strong>
           <ul>
             <li><strong>Lịch đi:</strong> Thời gian đi giữa các nhà cách nhau ngẫu nhiên từ 5-10 phút (không bị trùng).</li>
-            <li><strong>Mốc 1:</strong> Bật thông gió cùng lúc với giờ "Vào".</li>
+            <li><strong>Mốc 1:</strong> Thông gió cùng lúc với giờ "Vào".</li>
             <li><strong>Mốc 2:</strong> Cách Mốc 1 ít nhất 1 tiếng (60 phút).</li>
+          </ul>
+          <strong style="display:inline-block; margin-top: 8px;">3. Lưu lịch thông minh:</strong>
+          <ul>
+            <li>Lịch sẽ được <strong>lưu cố định</strong> cho cả ngày sau lần bấm đầu tiên.</li>
+            <li>Để tạo lại lịch mới, hãy <strong>bấm nhanh 3 lần</strong> vào nút CHIA LỊCH.</li>
           </ul>
         </div>
       </div>
 
-      <button onclick="taoDuLieu()" class="btn">CHIA LỊCH TỰ ĐỘNG</button>
+      <button onclick="xuLyNhanChiaLich()" class="btn">CHIA LỊCH TỰ ĐỘNG</button>
 
       <div id="ket-qua-chia-gio" style="display:none">
         <div class="card">
@@ -412,7 +418,6 @@
   function moKhungSua() {
     document.getElementById('view-summary').style.display = 'none';
     document.getElementById('view-edit').style.display = 'block';
-    // Ẩn bảng mô tả đi nếu đang bật để tránh rối màn hình lúc sửa
     document.getElementById('mo-ta-content').style.display = 'none';
   }
 
@@ -546,7 +551,7 @@
   });
 
   // ==========================================
-  // LOGIC TAB 2: CHIA GIỜ TỰ ĐỘNG
+  // LOGIC TAB 2: CHIA GIỜ TỰ ĐỘNG & BẤM 3 LẦN
   // ==========================================
   function formatTime(mins) {
     let h = Math.floor(mins / 60);
@@ -582,6 +587,38 @@
     return times;
   }
 
+  // --- LOGIC BẤM 3 LẦN ---
+  let soLanBam = 0;
+  let thoiGianCho = null;
+
+  function xuLyNhanChiaLich() {
+    let ngayHienTai = new Date().toLocaleDateString('vi-VN');
+    let ngayDaLuu = localStorage.getItem('ngayTaoLich');
+
+    if (ngayHienTai !== ngayDaLuu) {
+      // Lần đầu tiên trong ngày
+      taoDuLieu();
+    } else {
+      // Nếu ngày hôm nay đã tạo rồi, bắt buộc gõ 3 lần
+      soLanBam++;
+      if (soLanBam === 1) {
+        thoiGianCho = setTimeout(() => {
+          soLanBam = 0; // Quá 800ms mà không gõ đủ 3 lần thì reset
+        }, 800); 
+      }
+
+      if (soLanBam === 3) {
+        clearTimeout(thoiGianCho);
+        soLanBam = 0;
+        let xacNhan = confirm("Thay đổi Lịch chia?");
+        if (xacNhan) {
+          taoDuLieu();
+        }
+      }
+    }
+  }
+
+  // --- HÀM TẠO DỮ LIỆU & LƯU LẠI ---
   function taoDuLieu() {
     let n = parseInt(document.getElementById('so-nha').value);
     
@@ -590,7 +627,6 @@
     let cvBase = parseTime(document.getElementById('chieu-vao').value);
     let crBase = parseTime(document.getElementById('chieu-ra').value);
 
-    // Dãy thời gian Vào/Ra gốc
     let tgSangVao = taoDayThoiGian(svBase, true, n);
     let tgSangRa = taoDayThoiGian(srBase, false, n);
     let tgChieuVao = taoDayThoiGian(cvBase, true, n);
@@ -601,16 +637,13 @@
     let assignCV = shuffle([...tgChieuVao]);
     let assignCR = shuffle([...tgChieuRa]);
 
-    // Lấy thời gian Vào muộn nhất của Sáng và Chiều để làm mốc tính Mốc 2
     let maxSV = Math.max(...assignSV); 
     let maxCV = Math.max(...assignCV);
 
-    // Mốc 2 Sáng
     let startM2 = Math.max(480 + getRandom(0, 15), maxSV + 60);
     let tgMoc2 = taoDayThoiGian(startM2, true, n);
     let assignM2 = shuffle([...tgMoc2]); 
 
-    // Mốc 2 Chiều
     let startM4 = Math.max(840 + getRandom(0, 15), maxCV + 60);
     let tgMoc4 = taoDayThoiGian(startM4, true, n);
     let assignM4 = shuffle([...tgMoc4]); 
@@ -625,7 +658,6 @@
       let vaoSang = formatTime(assignSV[i]);
       let vaoChieu = formatTime(assignCV[i]);
 
-      // Dữ liệu Bảng Lịch Ra Vào
       let tr1 = document.createElement('tr');
       tr1.innerHTML = `
         <td>N${i + 1}</td>
@@ -636,7 +668,6 @@
       `;
       tbodyRaVao.appendChild(tr1);
 
-      // Dữ liệu Bảng Lịch Thông Gió
       let tr2 = document.createElement('tr');
       tr2.innerHTML = `
         <td>N${i + 1}</td>
@@ -649,7 +680,42 @@
     }
 
     document.getElementById('ket-qua-chia-gio').style.display = 'block';
+
+    // --- LƯU VÀO BỘ NHỚ TRÌNH DUYỆT ---
+    let ngayHienTai = new Date().toLocaleDateString('vi-VN');
+    localStorage.setItem('ngayTaoLich', ngayHienTai);
+    localStorage.setItem('bangRaVao', tbodyRaVao.innerHTML);
+    localStorage.setItem('bangThongGio', tbodyThongGio.innerHTML);
+    
+    // Lưu thông số bảng Tóm tắt để lúc mở lại không bị lệch
+    localStorage.setItem('sumSang', document.getElementById('sum-sang').innerText);
+    localStorage.setItem('sumChieu', document.getElementById('sum-chieu').innerText);
+    localStorage.setItem('sumNha', document.getElementById('sum-nha').innerText);
   }
+
+  // --- TỰ ĐỘNG TẢI LẠI LỊCH KHI MỞ TRANG ---
+  function taiDuLieuCu() {
+    let ngayHienTai = new Date().toLocaleDateString('vi-VN');
+    let ngayDaLuu = localStorage.getItem('ngayTaoLich');
+
+    if (ngayHienTai === ngayDaLuu) {
+      // Phục hồi bảng
+      document.querySelector('#bang-ra-vao tbody').innerHTML = localStorage.getItem('bangRaVao');
+      document.querySelector('#bang-thong-gio tbody').innerHTML = localStorage.getItem('bangThongGio');
+      
+      // Phục hồi khung tóm tắt
+      if(localStorage.getItem('sumSang')) {
+          document.getElementById('sum-sang').innerText = localStorage.getItem('sumSang');
+          document.getElementById('sum-chieu').innerText = localStorage.getItem('sumChieu');
+          document.getElementById('sum-nha').innerText = localStorage.getItem('sumNha');
+      }
+
+      document.getElementById('ket-qua-chia-gio').style.display = 'block';
+    }
+  }
+
+  // Chạy tải dữ liệu ngay khi web load xong
+  taiDuLieuCu();
 </script>
 
 </body>
