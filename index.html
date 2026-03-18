@@ -184,13 +184,6 @@
       font-weight: 800; 
       font-size: clamp(15px, 5vw, 19px); 
     }
-    .sub-note {
-      display: block;
-      font-size: 10px;
-      font-weight: normal;
-      color: #555;
-      margin-top: 2px;
-    }
 
     /* Style cho Thông gió cũ */
     .result-grid {
@@ -335,9 +328,9 @@
                 </tr>
                 <tr>
                   <th>Mốc 1</th>
-                  <th>Mốc 2<span class="sub-note">(8h-9h30)</span></th>
+                  <th>Mốc 2</th>
                   <th>Mốc 1</th>
-                  <th>Mốc 2<span class="sub-note">(14h-15h30)</span></th>
+                  <th>Mốc 2</th>
                 </tr>
               </thead>
               <tbody></tbody>
@@ -532,17 +525,15 @@
     let maxSV = Math.max(...assignSV); 
     let maxCV = Math.max(...assignCV);
 
-    // Mốc 2 Sáng (8h - 9h30 <=> 480 - 570)
-    // Ràng buộc: Bắt buộc phải lớn hơn Giờ Vào Sáng muộn nhất ít nhất 60 phút
+    // Mốc 2 Sáng
     let startM2 = Math.max(480 + getRandom(0, 15), maxSV + 60);
     let tgMoc2 = taoDayThoiGian(startM2, true, n);
-    let assignM2 = shuffle([...tgMoc2]); // Mọi mốc M2 đều được bảo đảm >= SV[i] + 60
+    let assignM2 = shuffle([...tgMoc2]); 
 
-    // Mốc 2 Chiều (14h - 15h30 <=> 840 - 930)
-    // Ràng buộc: Bắt buộc phải lớn hơn Giờ Vào Chiều muộn nhất ít nhất 60 phút
+    // Mốc 2 Chiều
     let startM4 = Math.max(840 + getRandom(0, 15), maxCV + 60);
     let tgMoc4 = taoDayThoiGian(startM4, true, n);
-    let assignM4 = shuffle([...tgMoc4]); // Mọi mốc M4 đều được bảo đảm >= CV[i] + 60
+    let assignM4 = shuffle([...tgMoc4]); 
 
     let tbodyRaVao = document.querySelector('#bang-ra-vao tbody');
     let tbodyThongGio = document.querySelector('#bang-thong-gio tbody');
