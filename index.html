@@ -71,6 +71,7 @@
       padding: 14px;
       box-shadow: 0 6px 16px rgba(0,0,0,0.08);
       margin-bottom: 15px;
+      position: relative; /* Thêm cái này để nút Mô tả nằm góc phải */
     }
 
     .card-title {
@@ -132,32 +133,18 @@
     }
     .btn:active { transform: scale(0.98); }
 
-    /* ====== STYLE NÚT & HỘP MÔ TẢ ====== */
-    .btn-mota {
-      width: 100%;
-      padding: 10px;
-      font-size: var(--fs-label);
-      font-weight: bold;
-      border: 2px solid #1976d2;
-      border-radius: 999px;
-      background: #fff;
-      color: #1976d2;
-      cursor: pointer;
-      margin-bottom: 15px;
-    }
-    .btn-mota:active { background: #eaf6ff; }
-    
+    /* ====== STYLE HỘP MÔ TẢ ====== */
     .mo-ta-box {
       background: #fff9e6;
       border-left: 4px solid #ff9800;
       padding: 12px;
       border-radius: 8px;
-      margin-bottom: 15px;
       font-size: var(--fs-label);
       color: #333;
-      line-height: 1.6;
+      line-height: 1.5;
+      margin-top: 15px;
     }
-    .mo-ta-box ul { margin: 5px 0 10px 0; padding-left: 20px; }
+    .mo-ta-box ul { margin: 5px 0 0 0; padding-left: 20px; }
     .mo-ta-box li { margin-bottom: 6px; }
 
     /* ====== STYLE CHO KHUNG TÓM TẮT ====== */
@@ -294,24 +281,12 @@
     </div>
 
     <div id="tab-chia-gio" class="tab-content">
-      
-      <button onclick="toggleMoTa()" class="btn-mota">MÔ TẢ CÁCH HOẠT ĐỘNG ⬇</button>
-      
-      <div id="mo-ta-content" class="mo-ta-box" style="display: none;">
-        <strong>1. Các thông tin cần chọn:</strong>
-        <ul>
-          <li>Nhập giờ làm việc (Buổi sáng và Buổi chiều).</li>
-          <li>Chọn số lượng nhà (Từ 1 đến 6 nhà).</li>
-        </ul>
-        <strong>2. Ứng dụng sẽ tự động tính toán:</strong>
-        <ul>
-          <li><strong>Lịch đi các nhà (Không bị trùng):</strong> Ứng dụng tự động xếp lịch để thời gian đi giữa các nhà cách nhau ngẫu nhiên từ 5 đến 10 phút.</li>
-          <li><strong>Thông gió lần 1 (Ngay lúc vào):</strong> Giờ thông gió "Mốc 1" sẽ giống hệt với giờ "Vào" của nhà đó.</li>
-          <li><strong>Thông gió lần 2 (Cách ít nhất 1 tiếng):</strong> Ứng dụng sẽ tự chia để giờ thông gió "Mốc 2" luôn cách "Mốc 1" ít nhất là 1 tiếng (60 phút).</li>
-        </ul>
-      </div>
 
       <div class="card">
+        <div onclick="toggleMoTa()" style="position: absolute; top: 10px; right: 12px; font-size: 11px; font-weight: 800; color: #1976d2; background: #eaf6ff; padding: 4px 8px; border-radius: 6px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+          ℹ️ MÔ TẢ
+        </div>
+
         <div class="card-title">THỜI GIAN LÀM VIỆC</div>
         
         <div id="view-summary" class="summary-box" onclick="moKhungSua()">
@@ -347,6 +322,20 @@
           </select>
           
           <button onclick="luuKhungSua()" class="btn" style="margin-top: 15px; margin-bottom: 0; background-color: #ff9800; font-size: 16px; padding: 12px;">XONG</button>
+        </div>
+
+        <div id="mo-ta-content" class="mo-ta-box" style="display: none;">
+          <strong>1. Các thông tin cần chọn:</strong>
+          <ul>
+            <li>Nhập giờ làm việc (Sáng và Chiều).</li>
+            <li>Chọn số lượng nhà (1 đến 6).</li>
+          </ul>
+          <strong style="display:inline-block; margin-top: 8px;">2. Ứng dụng tự động tính toán:</strong>
+          <ul>
+            <li><strong>Lịch đi:</strong> Thời gian đi giữa các nhà cách nhau ngẫu nhiên từ 5-10 phút (không bị trùng).</li>
+            <li><strong>Mốc 1:</strong> Bật thông gió cùng lúc với giờ "Vào".</li>
+            <li><strong>Mốc 2:</strong> Cách Mốc 1 ít nhất 1 tiếng (60 phút).</li>
+          </ul>
         </div>
       </div>
 
@@ -423,6 +412,8 @@
   function moKhungSua() {
     document.getElementById('view-summary').style.display = 'none';
     document.getElementById('view-edit').style.display = 'block';
+    // Ẩn bảng mô tả đi nếu đang bật để tránh rối màn hình lúc sửa
+    document.getElementById('mo-ta-content').style.display = 'none';
   }
 
   function luuKhungSua() {
