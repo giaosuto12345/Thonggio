@@ -140,7 +140,7 @@
       margin-bottom: 10px;
     }
 
-    /* ====== BẢNG CHIA GIỜ (ĐÃ UPDATE CHỮ TO RÕ HƠN) ====== */
+    /* ====== BẢNG CHIA GIỜ ====== */
     .table-container {
       overflow-x: auto;
       border-radius: 12px;
@@ -150,29 +150,46 @@
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: clamp(15px, 4.5vw, 18px); 
+      font-size: clamp(14px, 4.5vw, 18px); 
       text-align: center;
-      min-width: 320px;
+      min-width: 340px;
     }
     th, td { 
-      padding: 14px 4px; 
+      padding: 12px 2px; 
       border-bottom: 1px solid #eee; 
+      border-right: 1px solid #eee; /* Thêm vách ngăn mờ để dễ nhìn cột */
     }
+    th:last-child, td:last-child { border-right: none; }
+    
     th { 
       background: #e9f5ff; 
       color: #1976d2; 
       font-weight: 800; 
-      font-size: clamp(14px, 4vw, 16px);
+      font-size: clamp(13px, 4vw, 16px);
+      vertical-align: middle;
+    }
+    .th-group {
+      background: #d4ebff; /* Màu nền cột gộp đậm hơn chút */
+      border-bottom: 2px solid #fff;
     }
     td {
       font-weight: 600; 
       color: #333;
     }
     tr:last-child td { border-bottom: none; }
+    
+    /* Highlight màu cho cột Vào/Mốc 1 để dễ phân biệt */
     .td-highlight { 
       color: #ff9800; 
       font-weight: 800; 
-      font-size: clamp(16px, 5vw, 20px); 
+      font-size: clamp(15px, 5vw, 19px); 
+    }
+    .sub-note {
+      display: block;
+      font-size: 10px;
+      font-weight: normal;
+      color: #555;
+      margin-top: 2px;
     }
 
     /* Style cho Thông gió cũ */
@@ -288,7 +305,19 @@
           <div class="result-title" style="font-size: var(--fs-card-title); color: #1976d2;">1. LỊCH RA VÀO</div>
           <div class="table-container">
             <table id="bang-ra-vao">
-              <thead><tr><th>Nhà</th><th>Vào Sáng</th><th>Ra Sáng</th><th>Vào Chiều</th><th>Ra Chiều</th></tr></thead>
+              <thead>
+                <tr>
+                  <th rowspan="2">Nhà</th>
+                  <th colspan="2" class="th-group">Sáng</th>
+                  <th colspan="2" class="th-group">Chiều</th>
+                </tr>
+                <tr>
+                  <th>Vào</th>
+                  <th>Ra</th>
+                  <th>Vào</th>
+                  <th>Ra</th>
+                </tr>
+              </thead>
               <tbody></tbody>
             </table>
           </div>
@@ -298,7 +327,19 @@
           <div class="result-title" style="font-size: var(--fs-card-title); color: #1976d2;">2. LỊCH THÔNG GIÓ</div>
           <div class="table-container">
             <table id="bang-thong-gio">
-              <thead><tr><th>Nhà</th><th>Mốc 1<br>(Sáng)</th><th>Mốc 2<br>(8-9h)</th><th>Mốc 3<br>(Chiều)</th><th>Mốc 4<br>(14-15h)</th></tr></thead>
+              <thead>
+                <tr>
+                  <th rowspan="2">Nhà</th>
+                  <th colspan="2" class="th-group">Sáng</th>
+                  <th colspan="2" class="th-group">Chiều</th>
+                </tr>
+                <tr>
+                  <th>Mốc 1</th>
+                  <th>Mốc 2<span class="sub-note">(8h-9h30)</span></th>
+                  <th>Mốc 1</th>
+                  <th>Mốc 2<span class="sub-note">(14h-15h30)</span></th>
+                </tr>
+              </thead>
               <tbody></tbody>
             </table>
           </div>
@@ -476,20 +517,32 @@
     let cvBase = parseTime(document.getElementById('chieu-vao').value);
     let crBase = parseTime(document.getElementById('chieu-ra').value);
 
+    // Dãy thời gian Vào/Ra gốc
     let tgSangVao = taoDayThoiGian(svBase, true, n);
     let tgSangRa = taoDayThoiGian(srBase, false, n);
     let tgChieuVao = taoDayThoiGian(cvBase, true, n);
     let tgChieuRa = taoDayThoiGian(crBase, false, n);
 
-    let tgMoc2 = taoDayThoiGian(480 + getRandom(0, 15), true, n);
-    let tgMoc4 = taoDayThoiGian(840 + getRandom(0, 15), true, n);
-
     let assignSV = shuffle([...tgSangVao]);
     let assignSR = shuffle([...tgSangRa]);
     let assignCV = shuffle([...tgChieuVao]);
     let assignCR = shuffle([...tgChieuRa]);
-    let assignM2 = shuffle([...tgMoc2]);
-    let assignM4 = shuffle([...tgMoc4]);
+
+    // Lấy thời gian Vào muộn nhất của Sáng và Chiều để làm mốc tính Mốc 2
+    let maxSV = Math.max(...assignSV); 
+    let maxCV = Math.max(...assignCV);
+
+    // Mốc 2 Sáng (8h - 9h30 <=> 480 - 570)
+    // Ràng buộc: Bắt buộc phải lớn hơn Giờ Vào Sáng muộn nhất ít nhất 60 phút
+    let startM2 = Math.max(480 + getRandom(0, 15), maxSV + 60);
+    let tgMoc2 = taoDayThoiGian(startM2, true, n);
+    let assignM2 = shuffle([...tgMoc2]); // Mọi mốc M2 đều được bảo đảm >= SV[i] + 60
+
+    // Mốc 2 Chiều (14h - 15h30 <=> 840 - 930)
+    // Ràng buộc: Bắt buộc phải lớn hơn Giờ Vào Chiều muộn nhất ít nhất 60 phút
+    let startM4 = Math.max(840 + getRandom(0, 15), maxCV + 60);
+    let tgMoc4 = taoDayThoiGian(startM4, true, n);
+    let assignM4 = shuffle([...tgMoc4]); // Mọi mốc M4 đều được bảo đảm >= CV[i] + 60
 
     let tbodyRaVao = document.querySelector('#bang-ra-vao tbody');
     let tbodyThongGio = document.querySelector('#bang-thong-gio tbody');
@@ -501,9 +554,10 @@
       let vaoSang = formatTime(assignSV[i]);
       let vaoChieu = formatTime(assignCV[i]);
 
+      // Dữ liệu Bảng Lịch Ra Vào
       let tr1 = document.createElement('tr');
       tr1.innerHTML = `
-        <td><strong>Nhà ${i + 1}</strong></td>
+        <td>N${i + 1}</td>
         <td class="td-highlight">${vaoSang}</td>
         <td>${formatTime(assignSR[i])}</td>
         <td class="td-highlight">${vaoChieu}</td>
@@ -511,9 +565,10 @@
       `;
       tbodyRaVao.appendChild(tr1);
 
+      // Dữ liệu Bảng Lịch Thông Gió
       let tr2 = document.createElement('tr');
       tr2.innerHTML = `
-        <td><strong>Nhà ${i + 1}</strong></td>
+        <td>N${i + 1}</td>
         <td class="td-highlight">${vaoSang}</td>
         <td>${formatTime(assignM2[i])}</td>
         <td class="td-highlight">${vaoChieu}</td>
