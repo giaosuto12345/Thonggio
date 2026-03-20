@@ -31,11 +31,32 @@
     }
 
     /* ====== TAB NAVIGATION ====== */
-    .tabs { display: flex; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
+    .tabs { display: flex; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; align-items: center;}
     .tab-btn { flex: 1; padding: 15px 1px; text-align: center; font-size: clamp(13px, 3.8vw, 16px); font-weight: 800; color: #888; background: none; border: none; border-bottom: 4px solid transparent; cursor: pointer; white-space: nowrap; text-transform: uppercase;}
     .tab-btn.active { color: #1976d2; border-bottom: 4px solid #1976d2; }
     .tab-content { display: none; padding: 15px 10px; }
     .tab-content.active { display: block; }
+
+    /* ====== NÚT TẢI MỚI (CẬP NHẬT) ====== */
+    .tab-update-btn {
+      flex: 0.6;
+      margin: 6px 4px;
+      padding: 8px 2px;
+      background: linear-gradient(135deg, #ff9800, #e65100);
+      color: #fff !important;
+      border-radius: 8px;
+      font-size: clamp(11px, 3vw, 14px);
+      font-weight: 800;
+      border: none;
+      box-shadow: 0 4px 10px rgba(255, 152, 0, 0.4);
+      cursor: pointer;
+      transition: all 0.1s ease-in-out;
+      white-space: nowrap;
+    }
+    .tab-update-btn:active {
+      transform: translateY(2px) scale(0.96);
+      box-shadow: 0 2px 4px rgba(255, 152, 0, 0.4);
+    }
 
     .container { max-width: 900px; margin: 0 auto; }
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -96,9 +117,9 @@
   <div id="app-content">
     <div class="tabs">
       <button class="tab-btn active" onclick="switchTab('tab-thong-gio')">THÔNG GIÓ</button>
-      <button class="tab-btn" onclick="switchTab('tab-chia-gio')">CHIA GIỜ</button>
       <button class="tab-btn" onclick="switchTab('tab-thoi-tiet')">THỜI TIẾT</button>
-      <button class="tab-btn" onclick="capNhatPhienBanMoi()" style="color: #ff9800; flex: 0.5; padding-left: 5px; padding-right: 5px;">🔄 CẬP NHẬT</button>
+      <button class="tab-btn" onclick="switchTab('tab-chia-gio')">CHIA GIỜ</button>
+      <button class="tab-update-btn" onclick="capNhatPhienBanMoi()">🔄 CẬP NHẬT</button>
     </div>
 
     <div class="container">
@@ -141,6 +162,21 @@
             </div>
           </div>
           <div id="final" class="final"></div>
+        </div>
+      </div>
+
+      <div id="tab-thoi-tiet" class="tab-content">
+        <div class="card">
+          <div class="card-title">TRA CỨU THỜI TIẾT VÂN NHAM</div>
+          <label>Chọn ngày (Hôm nay & 10 ngày trước):</label><select id="weather-date"></select>
+          <label>Chọn giờ (00:00 - 23:00):</label><select id="weather-hour"></select>
+          <button onclick="fetchWeather()" class="btn" style="background:#1976d2; margin-top:15px;">LẤY DỮ LIỆU NGAY</button>
+          <div id="weather-loading" class="loading-text">Đang kết nối hệ thống vệ tinh...</div>
+          <div id="weather-result" class="weather-res-box">
+            <div class="w-label">NHIỆT ĐỘ</div><div id="res-temp" class="w-val">--°C</div>
+            <div style="height:15px;"></div>
+            <div class="w-label">ĐỘ ẨM</div><div id="res-hum" class="w-val">--%</div>
+          </div>
         </div>
       </div>
 
@@ -259,28 +295,12 @@
         </div>
       </div>
 
-      <div id="tab-thoi-tiet" class="tab-content">
-        <div class="card">
-          <div class="card-title">TRA CỨU THỜI TIẾT VÂN NHAM</div>
-          <label>Chọn ngày (Hôm nay & 10 ngày trước):</label><select id="weather-date"></select>
-          <label>Chọn giờ (00:00 - 23:00):</label><select id="weather-hour"></select>
-          <button onclick="fetchWeather()" class="btn" style="background:#1976d2; margin-top:15px;">LẤY DỮ LIỆU NGAY</button>
-          <div id="weather-loading" class="loading-text">Đang kết nối hệ thống vệ tinh...</div>
-          <div id="weather-result" class="weather-res-box">
-            <div class="w-label">NHIỆT ĐỘ</div><div id="res-temp" class="w-val">--°C</div>
-            <div style="height:15px;"></div>
-            <div class="w-label">ĐỘ ẨM</div><div id="res-hum" class="w-val">--%</div>
-          </div>
-        </div>
-      </div>
-
     </div>
   </div> 
 
   <script>
-  // ==========================================
-  // XỬ LÝ CHUYỂN TAB VÀ UI CHUNG
-  // ==========================================
+  // Chú thích tiếng Việt (Code Master Pro Style)
+  // Xử lý chuyển đổi giữa các Tab
   function switchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -332,24 +352,17 @@
     }
   }
 
-  // ==========================================
-  // LOGIC CẬP NHẬT PHIÊN BẢN (CACHE BUSTING CHUYÊN DỤNG CHO iOS PWA)
-  // ==========================================
+  // Logic cache busting chuyên dụng cho PWA
   function capNhatPhienBanMoi() {
     let xacNhan = confirm("Tải lại ứng dụng để cập nhật mã nguồn mới nhất từ máy chủ?");
     if (xacNhan) {
-      // Lấy URL gốc (loại bỏ các tham số cũ nếu có)
       let urlHienTai = window.location.origin + window.location.pathname;
-      // Lấy timestamp hiện tại (mili-giây)
       let thoiGianThuc = new Date().getTime();
-      // Chuyển hướng trang và ép trình duyệt tải file mới hoàn toàn
       window.location.href = urlHienTai + "?v=" + thoiGianThuc;
     }
   }
 
-  // ==========================================
-  // LOGIC TAB 1: THÔNG GIÓ
-  // ==========================================
+  // Data Bảng độ ẩm tĩnh
   const BANG_DO_AM = [
     [3.11,3.17,3.22,3.27,3.32,3.37,3.43,3.48,3.53,3.58,3.63,3.68,3.74,3.79,3.84,3.94,4,4,4.05,4.1,4.15,4.2,4.25,4.31,4.36,4.41,4.46,4.52,4.57,4.62,4.67,4.72,4.77,4.83,4.88,4.93,4.65,5.04,5.09,5.14],
     [3.33,3.39,3.45,3.5,3.56,3.61,3.67,3.72,3.78,3.83,3.89,3.94,4,4.06,4.11,4.22,4.28,4.28,4.33,4.39,4.45,4.5,4.56,4.61,4.67,4.72,4.78,4.83,4.89,4.95,5,5.06,5.11,5.17,5.22,5.28,4.98,5.39,5.45,5.5],
@@ -403,6 +416,7 @@
     return Math.round(doAmTuyetDoi * b13 / b12 * 10) / 10;
   }
 
+  // Xử lý sự kiện nút "Tính toán"
   document.getElementById('btnTinh').addEventListener('click', function() {
     const nt = parseFloat(document.getElementById('nt').value.replace(',', '.'));
     const dt = parseFloat(document.getElementById('dt').value.replace(',', '.'));
@@ -420,6 +434,7 @@
     document.getElementById('ndNgoai').innerText = ndNgoai.toFixed(1);
 
     let ketQua = '';
+    // Edge cases kiểm tra thông gió
     if (nn > 32) ketQua = 'Không thông gió (Nhiệt độ ngoài > 32°C)';
     else if (nn < 10) ketQua = 'Không thông gió (Nhiệt độ ngoài < 10°C)';
     else if (daTrong <= daNgoai) ketQua = 'Không thông gió (Độ ẩm tuyệt đối trong nhà thấp hơn)';
@@ -440,7 +455,7 @@
   });
 
   // ==========================================
-  // LOGIC TAB 2: CHIA GIỜ TĂNG DẦN & CỐ ĐỊNH LỊCH MỚI
+  // XỬ LÝ THỜI GIAN
   // ==========================================
   function addMinutes(timeStr, mins) {
     if(!timeStr) return "00:00";
@@ -627,7 +642,7 @@
   }
 
   // ==========================================
-  // LOGIC TAB 3: THỜI TIẾT OPEN-METEO
+  // LOGIC THỜI TIẾT OPEN-METEO
   // ==========================================
   function initWeatherOptions() {
     const dSel=document.getElementById('weather-date'); const hSel=document.getElementById('weather-hour'); const today=new Date();
@@ -642,11 +657,11 @@
       const resp=await fetch(url); const data=await resp.json();
       document.getElementById('res-temp').innerText=data.hourly.temperature_2m[hour]+"°C"; document.getElementById('res-hum').innerText=data.hourly.relative_humidity_2m[hour]+"%";
       load.style.display='none'; resB.style.display='block';
-    } catch(e) { alert("Lỗi mạng!"); load.style.display='none'; }
+    } catch(e) { alert("Lỗi mạng! Kiểm tra kết nối Internet của bạn."); load.style.display='none'; }
   }
 
   // ==========================================
-  // KHỞI CHẠY TẤT CẢ DỮ LIỆU CHÍNH
+  // KHỞI CHẠY TẤT CẢ DỮ LIỆU GỐC
   // ==========================================
   function khoiChayTatCaDuLieuGoc() {
     initWeatherOptions();
@@ -693,7 +708,7 @@
     }
   }
 
-  // KHỞI ĐỘNG KHI TẢI TRANG
+  // Khởi động khi tải xong cấu trúc DOM
   window.addEventListener('DOMContentLoaded', () => {
     khoiChayTatCaDuLieuGoc();
   });
