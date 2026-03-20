@@ -8,7 +8,11 @@
   <meta name="apple-mobile-web-app-title" content="Quản Lý Nhà" />
   <meta name="mobile-web-app-capable" content="yes" />
 
-  <title>Thông gió</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+
+  <title>Quản lý Nhà - Vân Nham</title>
 
   <style>
     * { -webkit-tap-highlight-color: transparent; }
@@ -94,6 +98,7 @@
       <button class="tab-btn active" onclick="switchTab('tab-thong-gio')">THÔNG GIÓ</button>
       <button class="tab-btn" onclick="switchTab('tab-chia-gio')">CHIA GIỜ</button>
       <button class="tab-btn" onclick="switchTab('tab-thoi-tiet')">THỜI TIẾT</button>
+      <button class="tab-btn" onclick="capNhatPhienBanMoi()" style="color: #ff9800; flex: 0.5; padding-left: 5px; padding-right: 5px;">🔄 CẬP NHẬT</button>
     </div>
 
     <div class="container">
@@ -324,6 +329,21 @@
     if(fixedConfig.isFixed && fixedConfig.data.length !== parseInt(n)) {
       fixedConfig.isFixed = false;
       localStorage.setItem('fixedSchedule', JSON.stringify(fixedConfig));
+    }
+  }
+
+  // ==========================================
+  // LOGIC CẬP NHẬT PHIÊN BẢN (CACHE BUSTING CHUYÊN DỤNG CHO iOS PWA)
+  // ==========================================
+  function capNhatPhienBanMoi() {
+    let xacNhan = confirm("Tải lại ứng dụng để cập nhật mã nguồn mới nhất từ máy chủ?");
+    if (xacNhan) {
+      // Lấy URL gốc (loại bỏ các tham số cũ nếu có)
+      let urlHienTai = window.location.origin + window.location.pathname;
+      // Lấy timestamp hiện tại (mili-giây)
+      let thoiGianThuc = new Date().getTime();
+      // Chuyển hướng trang và ép trình duyệt tải file mới hoàn toàn
+      window.location.href = urlHienTai + "?v=" + thoiGianThuc;
     }
   }
 
